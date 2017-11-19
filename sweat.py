@@ -59,6 +59,7 @@ def closest_mob(mobs):
         return mobs[d.index(min(d))]
     except:
         print("No mobs in vicinity!")
+        return None
 
 def mob_to_parallel(mob):
     try:
@@ -77,15 +78,19 @@ def track(distance_threshold, degree_threshold):
     screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
     radar = screen.crop((876, 537, 1023, 684))
     mobs = find_mob(radar)
+    if closest_mob(mobs) == None:
+        return False
     deg, distance = mob_to_parallel(closest_mob(mobs))
+    #print(deg, distance)
 
-    while distance > distance_threshold and abs(deg) > degree_threshold:
+    while distance > distance_threshold or abs(deg) > degree_threshold:
         print("searching")
         screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
         radar = screen.crop((876, 537, 1023, 684))
 
         mobs = find_mob(radar)
         deg, distance = mob_to_parallel(closest_mob(mobs))
+
         #print(deg, distance)
 
         if deg > degree_threshold:
@@ -110,7 +115,7 @@ def track(distance_threshold, degree_threshold):
     if key != None: directkeys.ReleaseKey(key)
     directkeys.ReleaseKey(w)
 
-    return True
+    return distance < distance_threshold and abs(deg) < degree_threshold
 
 def template_match(template):
     img_rgb = np.array(pyautogui.screenshot(region=(0, 80, 1024, 716)))
@@ -148,9 +153,10 @@ def workout():
 
 def main():
     while True:
-        track(6, 10)
         if select_target():
             workout()
+        else:
+            track(6, 10)
 
 #screenshot = pyautogui.screenshot('game.png', region=(0, 80, 1024, 716))
 main()
