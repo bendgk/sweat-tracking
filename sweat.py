@@ -151,3 +151,5 @@ def main():
         if track(6, 10):
             if select_target():
                 workout()
+
+main()
