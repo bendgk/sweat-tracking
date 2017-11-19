@@ -69,7 +69,7 @@ def mob_to_parallel(mob):
         #if mob_y < 0: mob_h = -mob_h
         return [math.asin(mob_x/mob_h) * 180/math.pi, mob_h]
     except:
-        return 0
+        return [0, 0]
 
 def track(distance_threshold, degree_threshold):
     key = None
@@ -112,10 +112,10 @@ def track(distance_threshold, degree_threshold):
 
     return True
 
-def template_match():
+def template_match(template):
     img_rgb = np.array(pyautogui.screenshot(region=(0, 80, 1024, 716)))
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
-    template = cv2.imread('template.jpg',0)
+    template = cv2.imread(template,0)
     w, h = template.shape[::-1]
 
     res = cv2.matchTemplate(img_gray,template,cv2.TM_CCOEFF_NORMED)
@@ -133,12 +133,12 @@ def template_match():
     return matched
 
 def select_target():
-    targeted = template_match()
-    while targeted != True:
-        print("targeting")
-        directkeys.PressKey(target)
-        targeted = template_match()
-    return True
+    targeted = template_match('health.jpg')
+    if targeted:
+        return True
+    print("targeting")
+    directkeys.PressKey(target)
+    return template_match('health.jpg')
 
 def workout():
     print("operating")
@@ -148,8 +148,9 @@ def workout():
 
 def main():
     while True:
-        if track(6, 10):
-            if select_target():
-                workout()
+        track(6, 10)
+        if select_target():
+            workout()
 
+#screenshot = pyautogui.screenshot('game.png', region=(0, 80, 1024, 716))
 main()
