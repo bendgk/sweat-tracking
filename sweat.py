@@ -64,24 +64,40 @@ def mob_to_parallel(mob):
     except:
         return 0
 
-def track(mob):
+def track():
     z = 0x2C
     c = 0x2E
-    deg = mob_to_parallel(mob)
-    if deg > 10:
-        directkeys.PressKey(c)
-        time.sleep(.05)
-        directkeys.ReleaseKey(c)
-    elif deg < -10:
-        directkeys.PressKey(z)
-        time.sleep(.05)
-        directkeys.ReleaseKey(z)
-            
-while True:
-    screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
-    radar = screen.crop((876, 537, 1023, 684))
-    mobs = find_mob(radar)
-    print(mob_to_parallel(closest_mob(mobs)))
+    key = None
+    
+    while True:
+        screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
+        radar = screen.crop((876, 537, 1023, 684))
+    
+        mobs = find_mob(radar)
+        deg = mob_to_parallel(closest_mob(mobs))
+        print(deg)
+        
+        
+        if deg > 10:
+            if key != None:
+                directkeys.ReleaseKey(key)
+            key = c
+            directkeys.PressKey(c)
+        elif deg < -10:
+            if key != None:
+                directkeys.ReleaseKey(key)
+            key = z
+            directkeys.PressKey(z)
 
-    track(closest_mob(mobs))
+        else:
+            if key == None:
+                break
+            
+            directkeys.ReleaseKey(key)
+            break
+
+        time.sleep(.05)
+                
+while True:
+    track()
 
