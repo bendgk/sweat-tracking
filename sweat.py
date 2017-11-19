@@ -15,6 +15,7 @@ z = 0x2C
 c = 0x2E
 w = 0x11
 target = 0x0B
+operate = 0x12
 
 def find_mob(radar):
     mob = (250, 60, 50)
@@ -37,7 +38,7 @@ def find_mob(radar):
         b[i] = list()
 
     class BreakIt(Exception): pass
-    
+
     for y in range(len(mobs)):
         for x in range(len(mobs)):
             if mobs[y][x] != 0:
@@ -72,20 +73,21 @@ def mob_to_parallel(mob):
 
 def track(distance_threshold, degree_threshold):
     key = None
-    
+
     screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
     radar = screen.crop((876, 537, 1023, 684))
     mobs = find_mob(radar)
     deg, distance = mob_to_parallel(closest_mob(mobs))
-    
+
     while distance > distance_threshold and abs(deg) > degree_threshold:
+        print("searching")
         screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
         radar = screen.crop((876, 537, 1023, 684))
-    
+
         mobs = find_mob(radar)
         deg, distance = mob_to_parallel(closest_mob(mobs))
-        print(deg, distance)
-        
+        #print(deg, distance)
+
         if deg > degree_threshold:
             if key != None:
                 directkeys.ReleaseKey(key)
@@ -104,14 +106,48 @@ def track(distance_threshold, degree_threshold):
 
         directkeys.PressKey(w)
         #time.sleep(.05)
-        
+
     if key != None: directkeys.ReleaseKey(key)
     directkeys.ReleaseKey(w)
 
+    return True
+
+def template_match():
+    img_rgb = np.array(pyautogui.screenshot(region=(0, 80, 1024, 716)))
+    img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+    template = cv2.imread('template.jpg',0)
+    w, h = template.shape[::-1]
+
+    res = cv2.matchTemplate(img_gray,template,cv2.TM_CCOEFF_NORMED)
+    threshold = 0.8
+    loc = np.where(res >= threshold)
+
+    matched = False
+
+    for pt in zip(*loc[::-1]):
+        matched = True
+        cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
+
+    cv2.imwrite('res.png',img_rgb)
+
+    return matched
+
+def select_target():
+    targeted = template_match()
+    while targeted != True:
+        print("targeting")
+        directkeys.PressKey(target)
+        targeted = template_match()
+    return True
+
+def workout():
+    print("operating")
+    directkeys.PressKey(operate)
+    time.sleep(0.5)
+    directkeys.ReleaseKey(operate)
+
 def main():
     while True:
-        track(6, 10)
-        print("mob within vicinity!")
-        directkeys.PressKey(target)
-    
-
+        if track(6, 10):
+            if select_target():
+                workout()
