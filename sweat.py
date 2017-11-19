@@ -16,6 +16,8 @@ c = 0x2E
 w = 0x11
 target = 0x0B
 operate = 0x12
+auto_operate = 0x02
+loot = 0x0A
 
 def find_mob(radar):
     mob = (250, 60, 50)
@@ -72,6 +74,16 @@ def mob_to_parallel(mob):
     except:
         return [0, 0]
 
+def in_range(distance_threshold):
+    screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
+    radar = screen.crop((876, 537, 1023, 684))
+    mobs = find_mob(radar)
+    if closest_mob(mobs) == None:
+        return False
+    deg, distance = mob_to_parallel(closest_mob(mobs))
+
+    return distance < distance_threshold
+
 def track(distance_threshold, degree_threshold):
     key = None
 
@@ -117,7 +129,7 @@ def track(distance_threshold, degree_threshold):
 
     return distance < distance_threshold and abs(deg) < degree_threshold
 
-def template_match(template):
+def template_match(template, write_out = False):
     img_rgb = np.array(pyautogui.screenshot(region=(0, 80, 1024, 716)))
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
     template = cv2.imread(template,0)
@@ -133,30 +145,29 @@ def template_match(template):
         matched = True
         cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
 
-    cv2.imwrite('res.png',img_rgb)
+    if write_out:
+        cv2.imwrite('res.png',img_rgb)
 
     return matched
 
-def select_target():
-    targeted = template_match('health.jpg')
-    if targeted:
-        return True
-    print("targeting")
-    directkeys.PressKey(target)
-    return template_match('health.jpg')
-
 def workout():
-    print("operating")
-    directkeys.PressKey(operate)
-    time.sleep(0.5)
-    directkeys.ReleaseKey(operate)
+    directkeys.PressKey(target)
+    time.sleep(.05)
+    directkeys.ReleaseKey(target)
+    directkeys.PressKey(auto_operate)
+    time.sleep(.05)
+    directkeys.ReleaseKey(auto_operate)
 
-def main():
+if __name__ == '__main__':
+    working = False
     while True:
-        if select_target():
-            workout()
-        else:
+        #screenshot = pyautogui.screenshot('game.png', region=(0, 80, 1024, 716))
+        if not in_range(8):
+            working = False
+            directkeys.PressKey(loot)
+            time.sleep(.05)
+            directkeys.ReleaseKey(loot)
             track(6, 10)
-
-#screenshot = pyautogui.screenshot('game.png', region=(0, 80, 1024, 716))
-main()
+        elif not working:
+            workout()
+            working = True
