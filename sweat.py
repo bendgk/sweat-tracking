@@ -18,6 +18,7 @@ target = 0x0B
 operate = 0x12
 auto_operate = 0x02
 loot = 0x0A
+deselect = 0x0C
 
 def find_mob(radar):
     mob = (250, 60, 50)
@@ -162,11 +163,12 @@ if __name__ == '__main__':
     working = False
     while True:
         #screenshot = pyautogui.screenshot('game.png', region=(0, 80, 1024, 716))
-        if not in_range(8):
+        while template_match('dead.jpg'):
             working = False
             directkeys.PressKey(loot)
             time.sleep(.05)
             directkeys.ReleaseKey(loot)
+        if not in_range(8):
             track(6, 10)
         elif not working:
             workout()
