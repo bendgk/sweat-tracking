@@ -1,6 +1,6 @@
 import numpy as np
 import pyautogui
-import cv2, math, time
+import cv2, math, time, directkeys
 
 from scipy import ndimage
 from scipy import misc
@@ -60,30 +60,28 @@ def mob_to_parallel(mob):
         mob_y = mob[1] - center[1]
 
         #if mob_y < 0: mob_h = -mob_h
-        
-        print(mob_x, mob_y, mob_h)
-        return math.asin(mob_x/mob_h)
+        return math.asin(mob_x/mob_h) * 180/math.pi
     except:
         return 0
 
 def track(mob):
-    while True:
-        deg = mob_to_parallel(mob)
-        if deg < 0:
-            pyautogui.keyDown('c')
-            time.sleep(.1)
-            pyautogui.keyUp('c')
-        else:
-            pyautogui.keyDown('z')
-            time.sleep(.1)
-            pyautogui.keyUp('z')
+    z = 0x2C
+    c = 0x2E
+    deg = mob_to_parallel(mob)
+    if deg > 10:
+        directkeys.PressKey(c)
+        time.sleep(.05)
+        directkeys.ReleaseKey(c)
+    elif deg < -10:
+        directkeys.PressKey(z)
+        time.sleep(.05)
+        directkeys.ReleaseKey(z)
+            
+while True:
+    screen = pyautogui.screenshot(region=(0, 80, 1024, 716))
+    radar = screen.crop((876, 537, 1023, 684))
+    mobs = find_mob(radar)
+    print(mob_to_parallel(closest_mob(mobs)))
 
-#while True:
-screen = pyautogui.screenshot('ss.png', region=(0, 80, 1024, 716))
-radar = screen.crop((876, 537, 1023, 684))
-radar.save('radar.png')
-mobs = find_mob(radar)
-print(mobs)
-print(mob_to_parallel(closest_mob(mobs))*180/math.pi)
+    track(closest_mob(mobs))
 
-track(closest_mob(mobs))
