@@ -105,3 +105,6 @@ ENV/
 
 #bat
 *.bat
+
+#png
+*.png
